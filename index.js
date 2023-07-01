@@ -17,7 +17,7 @@ function Thermostat(log, config) {
     this.name = config.name
     this.pollInterval = config.pollInterval || 1000
     this.validStates = config.validStates || [0, 1]
-    this.deviceIp = config.deviceIp || '192.168.0.128'
+    this.deviceIp = config.deviceIp || '192.168.0.100'
     this.rinnaiDevice = new rinnaiApi(this.log, this.deviceIp)
 
     this.checkupDelay = config.checkupDelay || 2000
@@ -124,27 +124,25 @@ Thermostat.prototype = {
     // },
 
     _getStatus: function (callback) {
-        this.log('Updating device status')
+        this.log('Updating device status- ip: %s', this.deviceIp)
         const deviceState = (isPoweredOn) => isPoweredOn ? 1 : 0
-        let deviceTemp, deviceIsPoweredOn
-
         try {
             this.rinnaiDevice.getState().then(
-                (parsedParams) => {
-                    deviceTemp = parsedParams.stateTargetTemp
+                parsedParams => {
+                    deviceTemp = parsedParams.targetTemperature
                     deviceIsPoweredOn = parsedParams.isPoweredOn
-                    this.log('Device response: %s', deviceTemp)
+                    this.log('Device response: %s', parsedParams)
+                    this.service.getCharacteristic(Characteristic.TargetTemperature).updateValue(deviceTemp)
+                    this.log('Updated TargetTemperature to: %s', deviceTemp)
+                    this.service.getCharacteristic(Characteristic.CurrentTemperature).updateValue(deviceTemp)
+                    this.log('Updated CurrentTemperature to: %s', deviceTemp)
+                    this.service.getCharacteristic(Characteristic.TargetHeatingCoolingState).updateValue(deviceState(deviceIsPoweredOn))
+                    this.log('Updated TargetHeatingCoolingState to: %s', deviceState(deviceIsPoweredOn))
+                    this.service.getCharacteristic(Characteristic.CurrentHeatingCoolingState).updateValue(deviceState(deviceIsPoweredOn))
+                    this.log('Updated CurrentHeatingCoolingState to: %s', deviceState(deviceIsPoweredOn))
+                    callback()
                 }
             )
-            this.service.getCharacteristic(Characteristic.TargetTemperature).updateValue(deviceTemp)
-            this.log('Updated TargetTemperature to: %s', deviceTemp)
-            this.service.getCharacteristic(Characteristic.CurrentTemperature).updateValue(deviceTemp)
-            this.log('Updated CurrentTemperature to: %s', deviceTemp)
-            this.service.getCharacteristic(Characteristic.TargetHeatingCoolingState).updateValue(deviceState(deviceIsPoweredOn))
-            this.log('Updated TargetHeatingCoolingState to: %s', deviceState(deviceIsPoweredOn))
-            this.service.getCharacteristic(Characteristic.CurrentHeatingCoolingState).updateValue(deviceState(deviceIsPoweredOn))
-            this.log('Updated CurrentHeatingCoolingState to: %s', deviceState(deviceIsPoweredOn))
-            callback()
         } catch (e) {
             this.log.warn('Error parsing status: %s', e.message)
             this.service.getCharacteristic(Characteristic.CurrentHeatingCoolingState).updateValue(new Error('Polling failed'))
@@ -278,7 +276,7 @@ Thermostat.prototype = {
 
         this._getStatus(function () { })
 
-        setInterval(function () {
+        setInterval(async function () {
             this._getStatus(function () { })
         }.bind(this), this.pollInterval * 1000)
 

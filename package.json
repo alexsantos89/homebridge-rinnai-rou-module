@@ -1,6 +1,6 @@
 {
     "name": "homebridge-rinnai-rou-module",
-    "version": "1.0.1",
+    "version": "1.0.7",
     "description": "Homebridge plugin for Rinnai heater with Wifi ROU003 module (Brazil)",
     "displayName": "Homebridge Rinnai Heater Wifi ROU module",
     "main": "index.js",
@@ -19,7 +19,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/alexsantos89.git"
+        "url": "git+https://github.com/alexsantos89/homebridge-rinnai-rou-module.git"
     },
     "keywords": [
         "homebridge-plugin"
