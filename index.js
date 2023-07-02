@@ -15,7 +15,7 @@ function Thermostat(log, config) {
     this.log = log
 
     this.name = config.name
-    this.pollInterval = config.pollInterval || 1000
+    this.pollInterval = config.pollInterval || 30
     this.validStates = config.validStates || [0, 1]
     this.deviceIp = config.deviceIp || '192.168.0.100'
     this.rinnaiDevice = new rinnaiApi(this.log, this.deviceIp)
@@ -142,7 +142,10 @@ Thermostat.prototype = {
                     this.log('Updated CurrentHeatingCoolingState to: %s', deviceState(deviceIsPoweredOn))
                     callback()
                 }
-            )
+            ).catch((error) => {
+                this.log('Error getting state: %s', error.message)
+                callback(error)
+            })
         } catch (e) {
             this.log.warn('Error parsing status: %s', e.message)
             this.service.getCharacteristic(Characteristic.CurrentHeatingCoolingState).updateValue(new Error('Polling failed'))
@@ -152,7 +155,22 @@ Thermostat.prototype = {
 
     setTargetHeatingCoolingState: function (value, callback) {
         this.log('Setting targetHeatingCoolingState: %s', value)
-        callback()
+
+        try {
+            this.rinnaiDevice.setPowerState(value).then(() => {
+                setTimeout(function () {
+                    this._getStatus(function () { })
+                }.bind(this), this.checkupDelay)
+                callback()
+            }
+            ).catch((error) => {
+                this.log('Error setting targetHeatingCoolingState: %s', error.message)
+                callback(error)
+            })
+        } catch (error) {
+            this.log('Error seting target state: %s', error.message)
+            callback(error)
+        }
         // const url = this.apiroute + '/targetHeatingCoolingState?value=' + value
         // this.log('Setting targetHeatingCoolingState: %s', url)
 
@@ -276,7 +294,7 @@ Thermostat.prototype = {
 
         this._getStatus(function () { })
 
-        setInterval(async function () {
+        setInterval(function () {
             this._getStatus(function () { })
         }.bind(this), this.pollInterval * 1000)
 

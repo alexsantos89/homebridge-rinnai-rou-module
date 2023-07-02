@@ -9,7 +9,8 @@ class rinnaiApi {
         this.localIp = ip.address() // config.get('localIp')
         this.deviceIp = deviceIp
         this.deviceApi = axios.create({
-            baseURL: `http://${this.deviceIp}`
+            baseURL: `http://${this.deviceIp}`,
+            timeout: 2000 // 2 seconds
         })
 
     }
@@ -41,6 +42,7 @@ class rinnaiApi {
         this.log("[RINNAI API] fetching heater state")
         return this.deviceApi('/tela_')
             .then(response => this.parseStateParams(response.data))
+            .catch(this.log("Error getting Rinnai device state."))
     }
 
 
