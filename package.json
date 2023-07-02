@@ -1,6 +1,6 @@
 {
     "name": "homebridge-rinnai-rou-module",
-    "version": "1.0.12",
+    "version": "1.0.15",
     "description": "Homebridge plugin for Rinnai heater with Wifi ROU003 module (Brazil)",
     "displayName": "Homebridge Rinnai Heater Wifi ROU module",
     "main": "index.js",
