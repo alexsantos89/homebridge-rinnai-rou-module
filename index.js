@@ -2,8 +2,6 @@ let Service, Characteristic
 const packageJson = require('./package.json')
 const { rinnaiApi } = require('./src/rinnai-api.js')
 const ip = require('ip')
-// const request = require('request')
-// const http = require('http')
 
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service
@@ -20,7 +18,7 @@ function Thermostat(log, config) {
     this.deviceIp = config.deviceIp || '192.168.0.100'
     this.rinnaiDevice = new rinnaiApi(this.log, this.deviceIp)
 
-    this.checkupDelay = config.checkupDelay || 5000
+    this.checkupDelay = config.checkupDelay || 2000
 
     this.manufacturer = config.manufacturer || packageJson.author
     this.serial = config.serial || this.deviceIp
@@ -41,87 +39,6 @@ Thermostat.prototype = {
         this.log('Identify requested!')
         callback()
     },
-
-    // _httpRequest: function (url, body, method, callback) {
-    //     request({
-    //         url: url,
-    //         body: body,
-    //         method: this.http_method,
-    //         LOCAL_IP: this.timeout,
-    //         rejectUnauthorized: false,
-    //         auth: this.auth
-    //     },
-    //         function (error, response, body) {
-    //             callback(error, response, body)
-    //         })
-    // },
-
-    // _getStatus: function (callback) {
-    //     const url = this.apiroute + '/status'
-    //     this.log('Getting status: %s', url)
-
-    //     this._httpRequest(url, '', this.http_method, function (error, response, responseBody) {
-    //         if (error) {
-    //             this.log.warn('Error getting status: %s', error.message)
-    //             this.service.getCharacteristic(Characteristic.CurrentHeatingCoolingState).updateValue(new Error('Polling failed'))
-    //             callback(error)
-    //         } else {
-    //             this.log('Device response: %s', responseBody)
-    //             try {
-    //                 const json = JSON.parse(responseBody)
-    //                 this.service.getCharacteristic(Characteristic.TargetTemperature).updateValue(json.targetTemperature)
-    //                 this.log('Updated TargetTemperature to: %s', json.targetTemperature)
-    //                 this.service.getCharacteristic(Characteristic.CurrentTemperature).updateValue(json.currentTemperature)
-    //                 this.log('Updated CurrentTemperature to: %s', json.currentTemperature)
-    //                 this.service.getCharacteristic(Characteristic.TargetHeatingCoolingState).updateValue(json.targetHeatingCoolingState)
-    //                 this.log('Updated TargetHeatingCoolingState to: %s', json.targetHeatingCoolingState)
-    //                 this.service.getCharacteristic(Characteristic.CurrentHeatingCoolingState).updateValue(json.currentHeatingCoolingState)
-    //                 this.log('Updated CurrentHeatingCoolingState to: %s', json.currentHeatingCoolingState)
-    //                 if (this.temperatureThresholds) {
-    //                     this.service.getCharacteristic(Characteristic.CoolingThresholdTemperature).updateValue(json.coolingThresholdTemperature)
-    //                     this.log('Updated CoolingThresholdTemperature to: %s', json.coolingThresholdTemperature)
-    //                     this.service.getCharacteristic(Characteristic.HeatingThresholdTemperature).updateValue(json.heatingThresholdTemperature)
-    //                     this.log('Updated HeatingThresholdTemperature to: %s', json.heatingThresholdTemperature)
-    //                 }
-    //                 if (this.currentRelativeHumidity) {
-    //                     this.service.getCharacteristic(Characteristic.CurrentRelativeHumidity).updateValue(json.currentRelativeHumidity)
-    //                     this.log('Updated CurrentRelativeHumidity to: %s', json.currentRelativeHumidity)
-    //                 }
-    //                 callback()
-    //             } catch (e) {
-    //                 this.log.warn('Error parsing status: %s', e.message)
-    //             }
-    //         }
-    //     }.bind(this))
-    // },
-
-    // _httpHandler: function (characteristic, value) {
-    //     switch (characteristic) {
-    //         case 'targetHeatingCoolingState': {
-    //             this.service.getCharacteristic(Characteristic.TargetHeatingCoolingState).updateValue(value)
-    //             this.log('Updated %s to: %s', characteristic, value)
-    //             break
-    //         }
-    //         case 'targetTemperature': {
-    //             this.service.getCharacteristic(Characteristic.TargetTemperature).updateValue(value)
-    //             this.log('Updated %s to: %s', characteristic, value)
-    //             break
-    //         }
-    //         case 'coolingThresholdTemperature': {
-    //             this.service.getCharacteristic(Characteristic.CoolingThresholdTemperature).updateValue(value)
-    //             this.log('Updated %s to: %s', characteristic, value)
-    //             break
-    //         }
-    //         case 'heatingThresholdTemperature': {
-    //             this.service.getCharacteristic(Characteristic.HeatingThresholdTemperature).updateValue(value)
-    //             this.log('Updated %s to: %s', characteristic, value)
-    //             break
-    //         }
-    //         default: {
-    //             this.log.warn('Unknown characteristic "%s" with value "%s"', characteristic, value)
-    //         }
-    //     }
-    // },
 
     _getStatus: function (callback) {
         this.log('Updating device status- ip: %s', this.deviceIp)
@@ -152,30 +69,15 @@ Thermostat.prototype = {
         this.log('Setting targetHeatingCoolingState: %s', value)
 
         this.rinnaiDevice.setPowerState(value).then(() => {
-            // setTimeout(function () {
-            //     this._getStatus(function () { })
-            // }.bind(this), this.checkupDelay)
+            setTimeout(function () {
+                this._getStatus(function () { })
+            }.bind(this), this.checkupDelay)
             callback()
         }
         ).catch((error) => {
             this.log('Error setting targetHeatingCoolingState: %s', error.message)
             callback(error)
         })
-        // const url = this.apiroute + '/targetHeatingCoolingState?value=' + value
-        // this.log('Setting targetHeatingCoolingState: %s', url)
-
-        // this._httpRequest(url, '', this.http_method, function (error, response, responseBody) {
-        //     if (error) {
-        //         this.log.warn('Error setting targetHeatingCoolingState: %s', error.message)
-        //         callback(error)
-        //     } else {
-        //         this.log('Set targetHeatingCoolingState to: %s', value)
-        //         setTimeout(function () {
-        //             this._getStatus(function () { })
-        //         }.bind(this), this.checkupDelay)
-        //         callback()
-        //     }
-        // }.bind(this))
     },
 
     setTargetTemperature: function (value, callback) {
@@ -184,25 +86,14 @@ Thermostat.prototype = {
 
         this.rinnaiDevice.setTemperature(value).then(() => {
             this.log('Set targetTemperature to: %s', value)
+            setTimeout(function () {
+                this._getStatus(function () { })
+            }.bind(this), this.checkupDelay)
             callback()
         }).catch((error) => {
             this.log('Error setting targetTemperature: %s', error.message)
             callback(error)
         })
-
-        // value = value.toFixed(0)
-        // const url = this.apiroute + '/targetTemperature?value=' + value
-        // this.log('Setting targetTemperature: %s', url)
-
-        // this._httpRequest(url, '', this.http_method, function (error, response, responseBody) {
-        //     if (error) {
-        //         this.log.warn('Error setting targetTemperature: %s', error.message)
-        //         callback(error)
-        //     } else {
-        //         this.log('Set targetTemperature to: %s', value)
-        //         callback()
-        //     }
-        // }.bind(this))
     },
 
     getServices: function () {
