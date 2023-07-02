@@ -10,7 +10,7 @@ class rinnaiApi {
         this.deviceIp = deviceIp
         this.deviceApi = axios.create({
             baseURL: `http://${this.deviceIp}`,
-            timeout: 2000 // 2 seconds
+            timeout: 5000 // 2 seconds
         })
 
     }
@@ -42,7 +42,7 @@ class rinnaiApi {
         this.log("[RINNAI API] fetching heater state")
         return this.deviceApi('/tela_')
             .then(response => this.parseStateParams(response.data))
-            .catch(this.log("Error getting Rinnai device state."))
+            .catch(this.log("Error getting Rinnai device state.")) // TODO alex - test without this
     }
 
 
