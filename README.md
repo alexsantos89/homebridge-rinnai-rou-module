@@ -12,8 +12,6 @@
 
 ## Description
 
-**THIS PLUGIN IS UNDER DEVELOPMENT, IT IS NOT WORKING AND IS BEING USED MAINLY FOR TESTING PURPOSES**
-
 This [homebridge](https://github.com/homebridge/homebridge) plugin exposes a Rinnai thermostat to Apple's [HomeKit](http://www.apple.com/ios/home/). <br>
 The plugin allows you to set the thermostat mode and control the target temperature. It is based on local wifi communication between
 homebridge server and Rinnai Wifi ROU003 module used by Rinnai Heaters mainly in Brazil.

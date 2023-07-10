@@ -13,7 +13,7 @@ function Thermostat(log, config) {
     this.log = log
 
     this.name = config.name
-    this.pollInterval = config.pollInterval || 30
+    this.pollInterval = config.pollInterval || 60
     this.validStates = config.validStates || [0, 1]
     this.deviceIp = config.deviceIp || '192.168.0.100'
     this.rinnaiDevice = new rinnaiApi(this.log, this.deviceIp)
@@ -36,30 +36,30 @@ function Thermostat(log, config) {
 Thermostat.prototype = {
 
     identify: function (callback) {
-        this.log('Identify requested!')
+        this.log.debug('Identify requested!')
         callback()
     },
 
     _getStatus: function (callback) {
-        this.log('Updating device status- ip: %s', this.deviceIp)
+        this.log.debug('Updating device status- ip: %s', this.deviceIp)
         const deviceState = (isPoweredOn) => isPoweredOn ? 1 : 0
         this.rinnaiDevice.getState().then(
             parsedParams => {
                 deviceTemp = parsedParams.targetTemperature
                 deviceIsPoweredOn = parsedParams.isPoweredOn
-                this.log('Device response: %s', parsedParams)
+                this.log.debug('Device response: %s', parsedParams)
                 this.service.getCharacteristic(Characteristic.TargetTemperature).updateValue(deviceTemp)
-                this.log('Updated TargetTemperature to: %s', deviceTemp)
+                this.log.debug('Updated TargetTemperature to: %s', deviceTemp)
                 this.service.getCharacteristic(Characteristic.CurrentTemperature).updateValue(deviceTemp)
-                this.log('Updated CurrentTemperature to: %s', deviceTemp)
+                this.log.debug('Updated CurrentTemperature to: %s', deviceTemp)
                 this.service.getCharacteristic(Characteristic.TargetHeatingCoolingState).updateValue(deviceState(deviceIsPoweredOn))
-                this.log('Updated TargetHeatingCoolingState to: %s', deviceState(deviceIsPoweredOn))
+                this.log.debug('Updated TargetHeatingCoolingState to: %s', deviceState(deviceIsPoweredOn))
                 this.service.getCharacteristic(Characteristic.CurrentHeatingCoolingState).updateValue(deviceState(deviceIsPoweredOn))
-                this.log('Updated CurrentHeatingCoolingState to: %s', deviceState(deviceIsPoweredOn))
+                this.log.debug('Updated CurrentHeatingCoolingState to: %s', deviceState(deviceIsPoweredOn))
                 callback()
             }
         ).catch((error) => {
-            this.log('Error getting state: %s', error.message)
+            this.log.debug('Error getting state: %s', error.message)
             this.service.getCharacteristic(Characteristic.CurrentHeatingCoolingState).updateValue(new Error('Polling failed'))
             callback(error)
         })
@@ -75,13 +75,13 @@ Thermostat.prototype = {
             callback()
         }
         ).catch((error) => {
-            this.log('Error setting targetHeatingCoolingState: %s', error.message)
+            this.log.debug('Error setting targetHeatingCoolingState: %s', error.message)
             callback(error)
         })
     },
 
     setTargetTemperature: function (value, callback) {
-        this.log('Setting targetTemperature: %s', value)
+        this.log.debug('Setting targetTemperature: %s', value)
         value = value.toFixed(0)
 
         this.rinnaiDevice.setTemperature(value).then(() => {
@@ -91,7 +91,7 @@ Thermostat.prototype = {
             }.bind(this), this.checkupDelay)
             callback()
         }).catch((error) => {
-            this.log('Error setting targetTemperature: %s', error.message)
+            this.log.debug('Error setting targetTemperature: %s', error.message)
             callback(error)
         })
     },
