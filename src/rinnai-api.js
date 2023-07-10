@@ -39,7 +39,7 @@ class rinnaiApi {
     }
 
     getState = () => {
-        this.log("[RINNAI API] fetching heater state")
+        this.log.debug("[RINNAI API] fetching heater state")
         return this.deviceApi('/tela_')
             .then(response => this.parseStateParams(response.data))
             // .catch(this.log("Error getting Rinnai device state.")) // TODO alex - test without this
